@@ -21,6 +21,38 @@ def cria_tabela():
 app = Flask(__name__)
 
 
+@app.route('/', methods=['GET'])
+def list():
+
+    try:
+
+        conexao = conn()
+        c = conexao.cursor()
+        c.execute("SELECT * FROM funcionario")
+
+        if c.rowcount == 0:
+            response = {'erro': 'funcionario(s) não encontrado(s)'}
+            return make_response(jsonify(response), 404, {'Content-Type': 'application/json'})
+
+        linhas = c.fetchall()
+
+        c.close()
+        conexao.close()
+
+        resultados = []
+
+        for linha in linhas:
+            resultados.append({'nome': linha[0], 'cpf': linha[1], 'cargo': linha[2]})
+
+        response = {'funcionarios': resultados, 'response': True}
+        return make_response(jsonify(response), 200, {'Content-Type': 'application/json'})
+
+    except Exception as e:
+
+        response = {'erro': 'não foi possivel executar a requisicao'}
+        return make_response(jsonify(response), 500, {'Content-Type': 'application/json'})
+
+
 @app.route('/cadastro', methods=['POST'])
 def create():
     cria_tabela()
@@ -45,11 +77,43 @@ def create():
     except Exception as e:
 
         response = {'erro': 'não foi possivel executar a requisicao'}
+        return make_response(jsonify(response), 500, {'Content-Type': 'application/json'})\
+
+
+
+@app.route('/cadastro/<cpf>', methods=['PUT'])
+def update(cpf):
+    try:
+        dados = request.get_json()
+
+        nome = dados['nome']
+        cargo = dados['cargo']
+        conexao = conn()
+        c = conexao.cursor()
+
+        if nome:
+            c.execute("UPDATE funcionario SET nome = ? WHERE cpf = ?", (nome, cpf))
+
+        if cargo:
+            c.execute("UPDATE funcionario SET cargo = ? WHERE cpf = ?", (cargo, cpf))
+
+        conexao.commit()
+
+        c.close()
+        conexao.close()
+
+        response = {'funcionario': {'nome': nome, 'cpf': cpf, 'cargo': cargo}, 'response': True}
+        return make_response(jsonify(response), 202, {'Content-Type': 'application/json'})
+
+    except Exception as e:
+
+        response = {'erro': 'não foi possivel executar a requisicao'}
+        print(e)
         return make_response(jsonify(response), 500, {'Content-Type': 'application/json'})
 
 
 @app.route('/cadastro/<cpf>', methods=['GET'])
-def get(cpf):
+def retrieve(cpf):
 
     try:
 
@@ -106,4 +170,4 @@ def delete(cpf):
 
 
 if __name__ == "__main__":
-    app.run(port=8080)
+    app.run(port=5000)

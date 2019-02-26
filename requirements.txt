@@ -6,7 +6,6 @@ idna==2.8
 itsdangerous==1.1.0
 Jinja2==2.10
 MarkupSafe==1.1.0
-mysql-connector-python==8.0.15
 protobuf==3.6.1
 requests==2.21.0
 six==1.12.0
